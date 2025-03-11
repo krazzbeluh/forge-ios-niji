@@ -107,6 +107,26 @@ end
 # Test                    #
 ###########################
 
+desc 'This lane is the script meant to help PR reviews with sonar analysis'
+lane :sonar_mr do |options|
+  prepare(options)
+
+  if ENV['PODFILE_PATH'].nil?
+    scan_with_project
+  else
+    scan_with_workspace
+  end
+
+  install_metrics_tools
+  version = get_version_number(
+    xcodeproj: ENV.fetch('XCPROJECT', nil),
+    target: ENV.fetch('TARGET', nil)
+  )
+  sonar(project_version: version)
+
+  danger(dangerfile: ENV['DANGERFILE_PATH']) if is_ci && !ENV['DANGERFILE_PATH'].nil?
+end
+
 desc 'Runs all the tests'
 lane :test do |options|
   prepare(options)
